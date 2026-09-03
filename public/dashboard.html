@@ -637,6 +637,7 @@ function render(){
     '<span>AI writing <b class="'+(S.mode.ai==='REAL'?'REAL':'MOCK')+'">'+esc(S.mode.ai==='REAL'?S.mode.aiProvider:'sample')+'</b></span>'+
     '<span>Kit email <b class="'+(String(S.mode.kit).indexOf('REAL')===0?'REAL':'MOCK')+'">'+(String(S.mode.kit).indexOf('REAL')===0?'connected':'sample')+'</b></span>'+
     '<span>Sheet DB <b class="'+(S.mode.sheets==='REAL'?'REAL':'MOCK')+'">'+(S.mode.sheets==='REAL'?'connected':'not linked')+'</b></span>'+
+    '<span>Libsyn <b class="'+(S.mode.libsyn==='REAL'?'REAL':'MOCK')+'">'+(S.mode.libsyn==='REAL'?'connected':'not connected')+'</b></span>'+
     '<span>Slack <b class="'+S.mode.slack+'">'+(S.mode.slack==='REAL'?'connected':'off')+'</b></span>';
   var pend=S.approvals.filter(function(a){return a.status==='PENDING'});
   var openLeads=S.leads.filter(function(l){return l.status==='PENDING'&&l.score!=='COLD'});
@@ -693,6 +694,10 @@ function render(){
         return '<div class="tile"><small>'+lbl+'</small><b>'+now+'</b><span class="'+(pct>=0?'up':'down')+'">'+(pct>=0?'▲':'▼')+' '+Math.abs(pct)+'% vs '+base+'</span></div>'};
       h+='<div class="tiles">'+t('Downloads 7d',e.kpi.downloads7d,e.kpi.prev4avg)+t('NL clicks',e.kpi.newsletterClicks,e.kpi.clicksPrev4avg)+
          t('Reach',e.kpi.socialReach,e.kpi.reachPrev4avg)+t('MSM/CSM',e.kpi.msmBooked,e.kpi.msmPrev4avg)+'</div>';
+    } else if(['RELEASED','KPI_READY','LEADS_READY','COMPLETE'].indexOf(e.stage)>-1){
+      h+='<p class="muted">'+(e.live&&e.live.live?'✓ Live URL verified. ':'')+
+        'Download numbers: not available yet — Libsyn API not connected. '+
+        'Newsletter click stats appear in Analytics after a broadcast actually sends.</p>';
     }
     return h+'</div>';
   }).join(''):'<div class="empty">No episodes yet.</div>';
