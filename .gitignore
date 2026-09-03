@@ -1,0 +1,6 @@
+node_modules/
+.next/
+data/
+config.local.js
+*.log
+.env*

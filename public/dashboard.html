@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TD Automation</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap">
+<style>
+:root{
+  --side:#0C1E24; --side-2:#122B33; --side-ink:#B7C6CB; --side-dim:#6E8288;
+  --bg:#F6F8F9; --card:#FFFFFF; --ink:#152228; --muted:#5F7278; --line:#E5EBEC;
+  --accent:#0D9488; --accent-2:#14B8A6; --accent-deep:#0B6E66;
+  --accent-soft:#E0F2F0; --accent-ghost:#F2FAF9;
+  --amber:#B45309; --amber-soft:#FCF3E4; --green:#15803D; --green-soft:#E5F3EA;
+  --red:#B93844; --red-soft:#FBEAEC;
+  --shadow:0 1px 2px rgba(15,34,40,.04), 0 6px 20px rgba(15,34,40,.05);
+  --fh:'Manrope','Inter',system-ui,sans-serif;
+  --fb:'Inter',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.6 var(--fb)}
+a{color:var(--accent)}
+.shell{display:flex;min-height:100vh}
+/* ---------- sidebar ---------- */
+aside{width:236px;flex:none;background:linear-gradient(180deg,var(--side),var(--side-2));
+  display:flex;flex-direction:column;padding:22px 14px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:11px;padding:2px 10px 22px;color:#fff}
+.brand .logo{width:34px;height:34px;border-radius:10px;flex:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:15px;color:#fff;
+  box-shadow:0 4px 12px rgba(20,184,166,.35)}
+.brand b{font-family:var(--fh);font-size:15px;font-weight:800;letter-spacing:-.01em;display:block;line-height:1.2}
+.brand small{color:var(--side-dim);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
+nav{display:flex;flex-direction:column;gap:2px}
+nav button{appearance:none;border:0;background:none;font-family:var(--fh);font-size:13.5px;font-weight:600;
+  color:var(--side-ink);padding:10px 12px;cursor:pointer;border-radius:9px;text-align:left;
+  display:flex;align-items:center;gap:11px;transition:background .15s,color .15s}
+nav button:hover{background:rgba(255,255,255,.06);color:#fff}
+nav button.on{background:linear-gradient(90deg,rgba(20,184,166,.22),rgba(20,184,166,.08));color:#fff;
+  box-shadow:inset 3px 0 0 var(--accent-2)}
+nav .ic{width:18px;height:18px;flex:none;opacity:.85}
+nav .n{margin-left:auto;background:#F97352;color:#fff;font-size:10px;font-weight:700;border-radius:999px;
+  padding:0 6px;min-width:17px;text-align:center;line-height:17px}
+nav .n:empty{display:none}
+.navcap{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--side-dim);
+  font-weight:800;padding:14px 12px 5px;font-family:var(--fh)}
+/* overview step map */
+.phase{border:1px solid var(--line);border-radius:14px;background:var(--card);box-shadow:var(--shadow);
+  margin-bottom:20px;overflow:hidden}
+.phase>.phead{padding:14px 20px;font-family:var(--fh);font-weight:800;font-size:14px;color:#fff;
+  display:flex;gap:10px;align-items:baseline}
+.phase>.phead small{font-weight:500;font-size:12px;opacity:.85}
+.phase.pre>.phead{background:linear-gradient(120deg,#345C8D,#4677B5)}
+.phase.post>.phead{background:linear-gradient(120deg,var(--accent-deep),var(--accent-2))}
+.psteps{padding:8px 20px 16px}
+.step{display:flex;gap:14px;padding:13px 0;border-bottom:1px dashed var(--line);align-items:flex-start}
+.step:last-child{border-bottom:0}
+.step .num{width:30px;height:30px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
+  font-family:var(--fh);font-weight:800;font-size:13px;background:var(--accent-soft);color:var(--accent-deep)}
+.step.manual .num{background:var(--amber-soft);color:var(--amber)}
+.step b{font-family:var(--fh);font-size:13.5px}
+.step p{margin:2px 0 0;color:var(--muted);font-size:12.5px;max-width:640px}
+.who{display:inline-block;font-family:var(--fh);font-size:9.5px;font-weight:800;letter-spacing:.06em;
+  border-radius:5px;padding:2px 8px;margin-left:8px;vertical-align:1px}
+.who.sys{background:var(--accent-soft);color:var(--accent-deep)}
+.who.you{background:var(--amber-soft);color:var(--amber)}
+.who.out{background:#EDF1F2;color:var(--muted)}
+.golink{margin-left:auto;flex:none;align-self:center}
+.side-foot{margin-top:auto;padding:14px 10px 0;border-top:1px solid rgba(255,255,255,.08)}
+.side-foot .cap{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--side-dim);margin-bottom:8px;font-weight:700}
+#conn{display:flex;flex-direction:column;gap:5px;font-size:11.5px}
+#conn span{display:flex;justify-content:space-between;color:var(--side-ink)}
+#conn b{font-weight:600}
+#conn .REAL{color:#5EEAD4} #conn .MOCK{color:#FCD34D}
+/* ---------- content ---------- */
+.content{flex:1;min-width:0}
+.pagehead{background:var(--card);border-bottom:1px solid var(--line);padding:20px 30px 18px}
+.pagehead h1{font-family:var(--fh);font-size:20px;font-weight:800;letter-spacing:-.02em;margin:0}
+.pagehead p{margin:3px 0 0;color:var(--muted);font-size:12.5px;max-width:860px}
+main{padding:24px 30px 60px;max-width:1060px}
+@media(max-width:860px){
+  .shell{flex-direction:column}
+  aside{width:100%;height:auto;position:static;flex-direction:row;align-items:center;gap:8px;padding:10px 12px;overflow-x:auto}
+  .brand{padding:0 6px}.brand small,.side-foot{display:none}
+  nav{flex-direction:row}
+  main,.pagehead{padding-left:16px;padding-right:16px}
+}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:20px 22px;margin-bottom:18px;box-shadow:var(--shadow)}
+.card h2{font-family:var(--fh);font-size:15px;font-weight:800;letter-spacing:-.01em;margin:0 0 4px}
+.card .sub{color:var(--muted);font-size:12.5px;margin:0 0 14px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin:10px 0 4px;
+  text-transform:uppercase;letter-spacing:.06em}
+input,textarea,select{width:100%;font:13.5px/1.5 var(--fb);border:1px solid var(--line);
+  border-radius:9px;padding:9px 11px;background:#FAFCFC;color:var(--ink)}
+input:focus,textarea:focus{outline:3px solid var(--accent-soft);border-color:var(--accent)}
+textarea{min-height:80px;resize:vertical}
+.btn{appearance:none;border:0;font-family:var(--fh);font-size:13px;font-weight:700;border-radius:9px;
+  padding:10px 18px;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  box-shadow:0 2px 10px rgba(13,148,136,.3);transition:transform .12s,box-shadow .12s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(13,148,136,.4)}
+.btn.sec{background:var(--accent-ghost);color:var(--accent-deep);border:1px solid #9BD6CF;box-shadow:none}
+.btn.quiet{background:var(--card);color:var(--muted);border:1px solid var(--line);box-shadow:none}
+.btn.warn{background:var(--amber-soft);color:var(--amber);border:1px solid #EBCB96;box-shadow:none}
+.btn.sm{padding:6px 13px;font-size:12px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.badge{display:inline-block;font-family:var(--fh);font-size:10.5px;font-weight:700;
+  border-radius:999px;padding:3px 11px;vertical-align:1px}
+.badge.auto{background:var(--accent-soft);color:var(--accent-deep)}
+.badge.gate{background:var(--amber-soft);color:var(--amber)}
+.badge.done{background:var(--green-soft);color:var(--green)}
+.badge.HOT{background:var(--red-soft);color:var(--red)}
+.badge.WARM{background:var(--amber-soft);color:var(--amber)}
+.badge.COLD{background:#EDF1F2;color:var(--muted)}
+.steps{display:flex;gap:4px;margin:12px 0 8px}
+.steps i{height:7px;flex:1;border-radius:4px;background:#E9EEEF}
+.steps i.on{background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+.steps i.g{background:linear-gradient(90deg,#D69E2E,#ECAF3F)}
+.epi{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:12px 0;background:#FDFEFE}
+.epi h3{font-family:var(--fh);margin:0;font-size:14.5px;font-weight:800}
+.muted{color:var(--muted);font-size:12.5px}
+.tblwrap{overflow-x:auto;border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{text-align:left;font-family:var(--fh);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--accent-deep);font-weight:800;padding:9px 11px;border-bottom:2px solid var(--accent-soft);
+  background:var(--accent-ghost)}
+td{padding:10px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+.approval{border:1px solid #EBD9BB;border-radius:14px;background:var(--card);margin:14px 0;
+  overflow:hidden;box-shadow:var(--shadow)}
+.approval .head{background:linear-gradient(120deg,#FCF3E4,#FAEDD5);padding:12px 18px;
+  font-family:var(--fh);font-weight:800;font-size:13.5px;color:var(--amber);
+  border-bottom:1px solid #F0E1C4;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.approval .head small{font-weight:500;color:#96702C;font-size:11.5px;align-self:center}
+.approval .body{padding:16px 18px}
+.nlcard{border:1px solid var(--line);border-radius:11px;margin:12px 0;overflow:hidden}
+.nlcard .nlhead{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--accent-ghost);
+  padding:9px 14px;border-bottom:1px solid var(--line)}
+.nlcard .nlhead b{font-family:var(--fh);font-size:12.5px;color:var(--accent-deep)}
+.subjchip{font-size:12px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:2px 12px}
+pre{background:#F5F8F9;border:1px solid var(--line);border-radius:9px;padding:13px;font-size:12px;
+  max-height:280px;overflow:auto;white-space:pre-wrap;font-family:ui-monospace,Consolas,monospace;margin:8px 0}
+iframe.preview{width:100%;height:340px;border:0;background:#fff;display:block}
+details{padding:0 14px 10px}
+details summary{cursor:pointer;font-size:12.5px;color:var(--muted);font-weight:600;margin:8px 0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin:16px 0}
+.tile{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--card);
+  box-shadow:var(--shadow);position:relative;overflow:hidden}
+.tile:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;
+  background:linear-gradient(180deg,var(--accent),var(--accent-2))}
+.tile small{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.tile b{display:block;font-family:var(--fh);font-size:26px;font-weight:800;
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em;margin-top:2px}
+.tile .up{color:var(--green);font-size:11.5px;font-weight:600}
+.tile .down{color:var(--red);font-size:11.5px;font-weight:600}
+.lead{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line)}
+.lead:last-child{border-bottom:0}
+.draft{border:1px dashed #C6DBDE;border-radius:9px;padding:10px 12px;font-size:12.5px;
+  color:var(--muted);margin:6px 0;background:var(--accent-ghost)}
+.feed{font-size:12.5px}
+.feed>div{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+.feed .t{color:var(--accent-deep);font-size:11px;white-space:nowrap;padding-top:2px;
+  font-variant-numeric:tabular-nums;font-weight:600}
+.empty{color:var(--muted);font-size:13px;padding:26px 0;text-align:center}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  background:var(--side);color:#fff;border-radius:10px;padding:10px 20px;font-size:13px;
+  font-family:var(--fh);font-weight:600;opacity:0;transition:.25s;pointer-events:none;z-index:20;
+  box-shadow:0 8px 24px rgba(12,30,36,.4)}
+.toast.show{opacity:1}
+.callout{border-left:3px solid var(--amber);background:var(--amber-soft);border-radius:0 9px 9px 0;
+  padding:9px 13px;font-size:12.5px;margin:10px 0}
+#busy{position:fixed;inset:0;background:rgba(12,30,36,.5);backdrop-filter:blur(3px);
+  display:none;align-items:center;justify-content:center;z-index:30}
+#busy.show{display:flex}
+#busy .box{background:var(--card);border-radius:16px;padding:28px 38px;text-align:center;
+  box-shadow:0 12px 44px rgba(0,0,0,.3);max-width:360px}
+#busy .spin{width:40px;height:40px;border-radius:50%;margin:0 auto 14px;
+  border:4px solid var(--accent-soft);border-top-color:var(--accent);animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+#busy b{font-family:var(--fh);font-size:14.5px;display:block;margin-bottom:4px}
+#busy span{color:var(--muted);font-size:12.5px}
+/* ---------- charts ---------- */
+.chart{border:1px solid var(--line);border-radius:12px;padding:16px 18px 12px;margin:16px 0;background:var(--card)}
+.chart h4{font-family:var(--fh);font-size:13px;font-weight:800;margin:0 0 2px}
+.chart .csub{color:var(--muted);font-size:11.5px;margin:0 0 12px}
+.crow{display:flex;align-items:center;gap:12px;padding:4px 0;border-radius:6px}
+.crow:hover{background:var(--accent-ghost)}
+.clabel{width:230px;min-width:110px;flex:none;font-size:12px;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+.ctrack{flex:1;height:20px;border-radius:5px;position:relative;
+  background:repeating-linear-gradient(90deg,#F1F5F6 0,#F1F5F6 calc(25% - 1px),#E2EAEB calc(25% - 1px),#E2EAEB 25%)}
+.cbar{display:block;height:14px;margin-top:3px;border-radius:3px 5px 5px 3px;
+  background:linear-gradient(90deg,var(--accent-deep),var(--accent-2));min-width:3px;
+  box-shadow:0 1px 3px rgba(13,148,136,.3);transition:width .5s cubic-bezier(.2,.8,.3,1)}
+.cval{font-size:12px;font-weight:700;color:var(--ink);width:56px;flex:none;
+  font-variant-numeric:tabular-nums;font-family:var(--fh)}
+.cscale{display:flex;margin-left:242px;margin-right:68px;justify-content:space-between;
+  font-size:10px;color:var(--muted);padding-top:6px}
+@media(max-width:640px){.clabel{width:110px}.cscale{margin-left:122px}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside>
+  <div class="brand"><span class="logo">TD</span><span><b>TD Automation</b><small>Thriving Dentist</small></span></div>
+  <nav id="tabs"></nav>
+  <div class="side-foot"><div class="cap">Connections</div><div id="conn"></div></div>
+</aside>
+
+<div class="content">
+<div class="pagehead"><h1 id="ph_t">Pipeline</h1><p id="ph_s"></p></div>
+<main>
+
+<!-- OVERVIEW -->
+<div data-page="Overview" hidden>
+  <div class="phase pre">
+    <div class="phead">PHASE 1 · BEFORE THE PODCAST <small>— finding and approving what to record</small></div>
+    <div class="psteps">
+      <div class="step"><span class="num">1</span><div><b>Find topic ideas <span class="who sys">SYSTEM</span></b>
+        <p>The AI reads every past topic (950+ across the whole show history) and recommends 5 new ones that fill real gaps — each with a category, priority, and a duplicate check so nothing already covered gets suggested again.</p></div>
+        <button class="btn sec sm golink" onclick="showPage('Topics')">Open Topics</button></div>
+      <div class="step"><span class="num">2</span><div><b>Add the good ones to the Gap Tracker <span class="who you">YOU · 1 CLICK</span></b>
+        <p>"Add to Gap Tracker" writes the full row (title, category, priority, dedup note, status "Open Gap") straight into the 🔍 Gap Tracker tab of the TD Podcast Topic Tracker sheet.</p></div></div>
+      <div class="step manual"><span class="num">3</span><div><b>Pitch to Gary &amp; Naren <span class="who out">IN THE TRACKER</span></b>
+        <p>From the Gap Tracker, topics are pitched via the 💡 Suggestions tab. Accepted ones move to the 📅 Recording Pipeline tab. This step happens inside the Google Sheet, not in this system.</p></div></div>
+      <div class="step manual"><span class="num">4</span><div><b>Record the episode <span class="who out">GARY + NAREN</span></b>
+        <p>The recording itself, plus transcript cleanup. When the clean transcript is ready, Phase 2 starts below.</p></div></div>
+    </div>
+  </div>
+
+  <div class="phase post">
+    <div class="phead">PHASE 2 · AFTER THE PODCAST <small>— the automated production line (you touch it 3 times)</small></div>
+    <div class="psteps">
+      <div class="step"><span class="num">1</span><div><b>Paste the clean transcript <span class="who you">YOU · TOUCH 1</span></b>
+        <p>Create the episode on the Pipeline page and paste the transcript. Everything below starts automatically.</p></div>
+        <button class="btn sec sm golink" onclick="showPage('Pipeline')">Open Pipeline</button></div>
+      <div class="step"><span class="num">2</span><div><b>AI writes the show notes <span class="who sys">SYSTEM</span></b>
+        <p>SEO description, timestamps, takeaways, title tag, and both CTA links — written from the transcript in about a minute.</p></div></div>
+      <div class="step"><span class="num">3</span><div><b>Approve the show notes <span class="who you">YOU · TOUCH 2 — GATE 1</span></b>
+        <p>Read, then Approve — or type what to change and the AI rewrites it. On approve, the webmaster ticket is built ready to copy-send, and the newsletters start writing themselves.</p></div>
+        <button class="btn sec sm golink" onclick="showPage('Approvals')">Open Approvals</button></div>
+      <div class="step"><span class="num">4</span><div><b>AI writes both newsletters <span class="who sys">SYSTEM</span></b>
+        <p>Weekly + weekend emails as ready-to-send HTML, previewed exactly as subscribers will see them.</p></div></div>
+      <div class="step"><span class="num">5</span><div><b>Approve the newsletters <span class="who you">YOU · TOUCH 3 — GATE 2</span></b>
+        <p>Check the previews on the Approvals page and approve. That's your last touch before release.</p></div></div>
+      <div class="step"><span class="num">6</span><div><b>Drafts land in Kit <span class="who sys">SYSTEM</span></b>
+        <p>Both emails are created as draft broadcasts in the Kit account. Audience rules (TD tags, cold subscribers excluded) are confirmed in Kit before scheduling, per the Kit SOP.</p></div></div>
+      <div class="step"><span class="num">7</span><div><b>Release day runs itself <span class="who sys">SYSTEM</span></b>
+        <p>On the release date the scheduler verifies the episode is live and pulls the KPIs — downloads, clicks, reach — compared against the last 4 episodes.</p></div></div>
+      <div class="step"><span class="num">8</span><div><b>Leads are scored &amp; drafted <span class="who sys">SYSTEM</span></b>
+        <p>Everyone who clicked the newsletter is pulled and scored: HOT clicked the strategy-meeting link, WARM read the episode. A personal message is drafted for each.</p></div>
+        <button class="btn sec sm golink" onclick="showPage('Leads')">Open Leads</button></div>
+      <div class="step manual"><span class="num">9</span><div><b>Send the follow-ups personally <span class="who you">YOU — THE PAYOFF</span></b>
+        <p>Copy each draft and send it from your own account, then mark it. Pricing/timing questions go to BDR the same day. This is how episodes become booked strategy meetings.</p></div></div>
+    </div>
+  </div>
+  <p class="muted">Everything the system does is logged in <a href="#" onclick="showPage('Activity');return false">Activity</a>, and results land in <a href="#" onclick="showPage('Analytics');return false">Analytics</a> plus the Topic Tracker sheet the whole team can open.</p>
+</div>
+
+<!-- PIPELINE -->
+<div data-page="Pipeline">
+  <div class="card">
+    <h2>New episode</h2>
+    <p class="sub">Create it, drop the transcript in — the system writes and assembles everything, pausing only where you approve.</p>
+    <div class="row">
+      <div><label>Episode #</label><input id="n_ep" value="765"></div>
+      <div style="grid-column:span 2"><label>Title</label><input id="n_title" placeholder="episode title"></div>
+      <div><label>Guest / co-host</label><input id="n_guest" value="Naren"></div>
+      <div><label>Release date</label><input id="n_date" type="date"></div>
+    </div>
+    <div class="btnrow"><button class="btn" onclick="createEp()">Start pipeline</button></div>
+  </div>
+  <div class="card"><h2>Episodes</h2><div id="episodes"><div class="empty">No episodes yet.</div></div></div>
+</div>
+
+<!-- APPROVALS -->
+<div data-page="Approvals" hidden>
+  <div class="card">
+    <div id="approvals"><div class="empty">Nothing waiting — the pipeline is running or idle.</div></div>
+  </div>
+</div>
+
+<!-- TOPICS -->
+<div data-page="Topics" hidden>
+  <div class="card">
+    <h2>Topic recommendations</h2>
+    <p class="sub" id="arc_count"></p>
+    <div class="btnrow" style="margin-top:0">
+      <button class="btn" onclick="recommendTopics()">Recommend 5 new topics</button>
+    </div>
+    <div id="trec"></div>
+  </div>
+  <div class="card">
+    <h2>Check an idea for duplicates</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input id="tcheck" placeholder="type a proposed topic…" style="flex:1;min-width:220px">
+      <button class="btn sec" onclick="topicCheck()">Check</button>
+    </div>
+    <div id="tcheck_out"></div>
+  </div>
+  <div class="card">
+    <h2>Past episodes</h2>
+    <input id="tq" placeholder="Search titles — e.g. scheduling, insurance, hiring…" oninput="arcSearch()">
+    <div class="tblwrap" id="tlist" style="margin-top:10px"></div>
+  </div>
+</div>
+
+<!-- LEADS -->
+<div data-page="Leads" hidden>
+  <div class="card">
+    <div id="leads"><div class="empty">Leads appear after an episode releases.</div></div>
+  </div>
+</div>
+
+<!-- ANALYTICS -->
+<div data-page="Analytics" hidden>
+  <div class="card">
+    <div class="btnrow" style="margin-top:0"><button class="btn" onclick="refreshAnalytics()">Refresh analytics</button></div>
+    <div id="an_out"><div class="empty">Click refresh to pull the latest data from Kit.</div></div>
+  </div>
+</div>
+
+<!-- ACTIVITY -->
+<div data-page="Activity" hidden>
+  <div class="card"><div class="feed" id="feed"></div></div>
+</div>
+
+</main>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div id="busy"><div class="box"><div class="spin"></div><b id="busy_t">Working…</b><span id="busy_s">This can take up to a minute while the AI writes.</span></div></div>
+
+<script>
+'use strict';
+var S={episodes:[],approvals:[],leads:[],log:[],mode:{},stages:[],archive:{}};
+var _recs=[], _an=null;
+function $(id){return document.getElementById(id)}
+function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2200)}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+function busy(title,subtitle){$('busy_t').textContent=title;$('busy_s').textContent=subtitle||'This can take up to a minute while the AI writes.';$('busy').classList.add('show')}
+function unbusy(){$('busy').classList.remove('show')}
+async function api(path,data){
+  var r=await fetch(path,data?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)}:undefined);
+  var j=await r.json();
+  if(!r.ok){toast('Error: '+j.error);throw new Error(j.error)}
+  return j;
+}
+function copyText(t){navigator.clipboard.writeText(t).then(function(){toast('Copied to clipboard')})}
+function cleanAI(s){return String(s==null?'':s).replace(/```[a-zA-Z]*\r?\n?/g,'').replace(/\\n/g,'\n').replace(/\r/g,'')}
+/* ---- pagination ---- */
+var PG={arc:{p:0,n:15},feed:{p:0,n:20},antbl:{p:0,n:20}};
+function pager(key,total,renderFn){
+  var g=PG[key],pages=Math.max(1,Math.ceil(total/g.n));
+  if(g.p>=pages)g.p=pages-1;
+  window['_pg_'+key]=renderFn;
+  if(total<=g.n)return '';
+  return '<div style="display:flex;gap:10px;align-items:center;justify-content:flex-end;padding:10px 0 2px;font-size:12px;color:var(--muted)">'+
+    '<button class="btn quiet sm" '+(g.p===0?'disabled style="opacity:.4"':'')+' onclick="pgGo(\''+key+'\',-1)">‹ Prev</button>'+
+    '<span>'+(g.p*g.n+1)+'–'+Math.min(total,(g.p+1)*g.n)+' of '+total+'</span>'+
+    '<button class="btn quiet sm" '+(g.p>=pages-1?'disabled style="opacity:.4"':'')+' onclick="pgGo(\''+key+'\',1)">Next ›</button></div>';
+}
+function pgGo(key,d){PG[key].p+=d;if(PG[key].p<0)PG[key].p=0;var f=window['_pg_'+key];if(f)f()}
+function pageOf(key,arr){var g=PG[key];return arr.slice(g.p*g.n,(g.p+1)*g.n)}
+
+/* ---- nav ---- */
+var ICONS={
+ Overview:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>',
+ Pipeline:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h10M4 18h7"/></svg>',
+ Approvals:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-5"/><circle cx="12" cy="12" r="9"/></svg>',
+ Topics:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 1 4 10.5V17h-8v-3.5A6 6 0 0 1 12 3z"/><path d="M10 21h4"/></svg>',
+ Leads:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M17 8h5M17 12h5"/></svg>',
+ Analytics:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+ Activity:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 8-6-16-3 8H2"/></svg>'
+};
+var HEADS={
+ Overview:['How the system works','The whole flow on one page: what happens before the podcast, what happens after, and exactly where a human steps in.'],
+ Pipeline:['Post-podcast · Pipeline','Steps 1–9 after recording. Every episode runs left to right on its own — you only step in at the numbered touches.'],
+ Approvals:['Post-podcast · Approvals','Touches 2 and 3: approve the show notes (Gate 1) and the newsletters (Gate 2), or send back with a note and the AI rewrites.'],
+ Topics:['Pre-podcast · Topics','Phase 1: search everything the show has covered, screen new ideas for duplicates, and push winners into the Gap Tracker.'],
+ Leads:['Post-podcast · Leads','Step 9, the payoff: newsletter clickers scored and drafted. You send each message personally — pricing questions go to BDR same day.'],
+ Analytics:['Analytics','Real send performance from Kit plus episode checks. Refreshing also writes to the Topic Tracker’s Analytics tab.'],
+ Activity:['Activity','Everything the system did, newest first.']
+};
+var PAGES=['Overview','Topics','Pipeline','Approvals','Leads','Analytics','Activity'];
+var NAVGROUPS=[
+ {cap:'', items:['Overview']},
+ {cap:'1 · Pre-podcast', items:['Topics']},
+ {cap:'2 · Post-podcast', items:['Pipeline','Approvals','Leads']},
+ {cap:'Insights', items:['Analytics','Activity']}
+];
+var pages={},tabBtns={};
+NAVGROUPS.forEach(function(g){
+  if(g.cap){var c=document.createElement('div');c.className='navcap';c.textContent=g.cap;$('tabs').appendChild(c)}
+  g.items.forEach(function(p){
+    pages[p]=document.querySelector('[data-page="'+p+'"]');
+    var b=document.createElement('button');
+    b.innerHTML=ICONS[p]+p+'<span class="n" id="n_'+p+'"></span>';
+    b.onclick=function(){showPage(p)};
+    $('tabs').appendChild(b);tabBtns[p]=b;
+  });
+});
+function showPage(p){
+  PAGES.forEach(function(q){pages[q].hidden=q!==p;tabBtns[q].classList.toggle('on',q===p)});
+  $('ph_t').textContent=HEADS[p][0];$('ph_s').textContent=HEADS[p][1];
+  try{localStorage.setItem('td_tab',p)}catch(e){}
+}
+var startTab='Overview';try{startTab=localStorage.getItem('td_tab')||'Overview'}catch(e){}
+if(PAGES.indexOf(startTab)<0)startTab='Overview';
+showPage(startTab);
+// human-readable step names for every pipeline stage (post-podcast steps 1-9)
+var STAGE_INFO={
+ AWAITING_TRANSCRIPT:  ['Step 1 · Paste the clean transcript','gate'],
+ GENERATING_SHOWNOTES: ['Step 2 · AI writing show notes…','auto'],
+ REVIEW_SHOWNOTES:     ['Step 3 ⛭ Approve the show notes','gate'],
+ TICKET_READY:         ['Step 3 · Ticket built — approving…','auto'],
+ GENERATING_NEWSLETTERS:['Step 4 · AI writing newsletters…','auto'],
+ REVIEW_NEWSLETTERS:   ['Step 5 ⛭ Approve the newsletters','gate'],
+ SCHEDULED_IN_KIT:     ['Step 6 · Drafts in Kit — waiting for release day','auto'],
+ RELEASED:             ['Step 7 · Live — pulling KPIs…','auto'],
+ KPI_READY:            ['Step 7 · KPIs ready','auto'],
+ LEADS_READY:          ['Step 8–9 ⛭ Send the lead follow-ups','gate'],
+ COMPLETE:             ['Complete ✓ all 9 steps done','done']
+};
+
+/* ---- actions ---- */
+var SAMPLE_TRANSCRIPT="Gary: Welcome back to the Thriving Dentist Show. Today I'm with Dr. Kelly Nguyen, who runs a practice in Austin that moved to a four-day week two years ago.\nKelly: Thanks Gary. Honestly, we were burning out. Production was flat at about $95,000 a month and my team was exhausted.\nGary: So walk me through it. What changed first?\nKelly: Block scheduling. We rebuilt the schedule around two production columns, moved all hygiene checks into fixed windows, and stopped accepting same-day schedule chaos. Within ninety days production went to $116,000 a month on four days instead of five.\nGary: That's a 22 percent lift with a day off the schedule. What about the team?\nKelly: Retention. Nobody has left in two years. Recruiting got easier too, because a four-day week is the first thing candidates ask about.\nGary: If a practice owner listening wants to try this, where do they start?\nKelly: Track your hourly production per column for thirty days first. You cannot redesign a schedule you have not measured.";
+
+async function createEp(){
+  if(!$('n_title').value){toast('Give the episode a title');return}
+  busy('Creating episode…','Setting up the pipeline.');
+  try{
+    await api('/api/episodes',{epNum:$('n_ep').value,title:$('n_title').value,guest:$('n_guest').value,
+      releaseDate:$('n_date').value||new Date(Date.now()+6*864e5).toISOString().slice(0,10)});
+    toast('Episode created — drop the transcript in');await refresh();
+  } finally{unbusy()}
+}
+async function sendTranscript(id,useSample){
+  var text=useSample?SAMPLE_TRANSCRIPT:($('tr_'+id)?$('tr_'+id).value:'');
+  if(!text){toast('Paste a transcript first');return}
+  busy('Writing show notes…','The AI is reading the transcript and drafting the SEO show-notes package.');
+  try{ await api('/api/transcript',{id:id,text:text}); await refresh(); showPage('Approvals'); toast('Show notes ready for your review'); }
+  finally{unbusy()}
+}
+async function decide(id,decision){
+  var notes=decision==='changes'?($('note_'+id).value||''):'';
+  if(decision==='changes'&&!notes){toast('Write what to change first');return}
+  var ap=S.approvals.find(function(a){return a.id===id});
+  var isNL=ap&&ap.type==='NEWSLETTERS';
+  busy(decision==='approve'?(isNL?'Creating drafts in Kit…':'Approved — writing both newsletters…')
+                           :'Rewriting with your notes…',
+       decision==='approve'&&!isNL?'Building the webmaster ticket, then drafting the weekly and weekend emails.':undefined);
+  try{ await api('/api/decide',{approvalId:id,decision:decision,notes:notes}); await refresh();
+       toast(decision==='approve'?'Approved — pipeline continued':'Regenerated — review the new version'); }
+  finally{unbusy()}
+}
+async function advance(id){
+  busy('Simulating release day…','Checking the live URL, pulling KPIs, and scoring newsletter clickers.');
+  try{ await api('/api/advance',{id:id}); await refresh(); toast('Released — see KPIs and the Leads tab'); }
+  finally{unbusy()}
+}
+async function leadDo(id,status){await api('/api/lead',{leadId:id,status:status});refresh()}
+function copyTicket(epId){var e=S.episodes.find(function(x){return x.id===epId});if(e)copyText(e.ticket)}
+function copyNL(apId,kind){
+  var ap=S.approvals.find(function(a){return a.id===apId});if(!ap)return;
+  var part=splitNewsletters(ap.content).find(function(n){return n.key===kind});
+  if(part)copyText(part.html||part.raw);
+}
+function copyLead(id){var l=S.leads.find(function(x){return x.id===id});if(l)copyText(l.draft)}
+
+/* ---- topics ---- */
+var arcTimer=null,_arc=[];
+function renderArc(){
+  var rows=pageOf('arc',_arc);
+  $('tlist').innerHTML=(_arc.length?'<table><tr><th>EP</th><th>Title</th><th>Released</th><th>Guest / Category</th></tr>'+
+    rows.map(function(e){return '<tr><td><b>'+(e.ep==='bank'?'<span class="muted">bank</span>':esc(e.ep))+'</b></td><td>'+esc(e.title)+'</td><td class="muted">'+esc(e.date||'—')+'</td><td class="muted">'+esc(e.guest)+'</td></tr>'}).join('')+'</table>'
+    :'<div class="empty">No matches — that could be an open topic gap.</div>')+
+    pager('arc',_arc.length,renderArc);
+}
+function arcSearch(){
+  clearTimeout(arcTimer);
+  arcTimer=setTimeout(async function(){
+    _arc=await api('/api/archive?q='+encodeURIComponent($('tq').value));
+    PG.arc.p=0;renderArc();
+  },250);
+}
+async function topicCheck(){
+  var t=$('tcheck').value;if(!t){toast('Type a topic first');return}
+  var r=await api('/api/topics/check',{title:t});
+  var col=r.verdict==='CLEAR'?'var(--green)':r.verdict.indexOf('SIMILAR')===0?'var(--amber)':'var(--red)';
+  $('tcheck_out').innerHTML='<div style="border:1px solid var(--line);border-left:4px solid '+col+';border-radius:9px;padding:10px 14px;margin-top:12px">'+
+    '<b style="color:'+col+'">'+esc(r.verdict)+'</b> <span class="muted">(closest match '+r.top+'%)</span>'+
+    (r.matches.length?'<div class="muted" style="margin-top:4px">'+r.matches.slice(0,3).map(function(m){return 'EP '+m.ep+' · '+esc(m.title)+' — '+m.sim+'%'}).join('<br>')+'</div>':'')+'</div>';
+}
+function copyRec(i){copyText(_recs[i].title)}
+async function pushRecs(idx){
+  var topics=idx==null?_recs:[_recs[idx]];
+  busy('Adding to the Gap Tracker…','Writing row(s) into the 🔍 Gap Tracker tab of the TD Podcast Topic Tracker.');
+  try{
+    var r=await api('/api/topics/push',{topics:topics});
+    toast('Added '+r.appended+' topic(s) to '+r.tab);
+  } finally{unbusy()}
+}
+async function recommendTopics(){
+  busy('Analyzing the archive…','Reading every past episode title and finding the gaps.');
+  try{
+    _recs=await api('/api/topics/recommend',{});
+    $('trec').innerHTML=_recs.map(function(t,i){
+      var col=t.dup.top>=30?'var(--amber)':'var(--green)';
+      return '<div style="border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin:8px 0">'+
+      '<b>'+(i+1)+'. '+esc(t.title)+'</b>'+
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0">'+
+      (t.category?'<span class="badge auto">'+esc(t.category)+'</span>':'')+
+      (t.priority?'<span class="badge '+(t.priority==='High'?'HOT':t.priority==='Medium'?'WARM':'COLD')+'">'+esc(t.priority)+' priority</span>':'')+
+      '<span style="color:'+col+';font-size:11.5px;font-weight:700;align-self:center">duplicate check '+t.dup.top+'%</span></div>'+
+      '<div class="muted">'+esc(t.why)+'</div>'+
+      '<div class="btnrow"><button class="btn sm" onclick="pushRecs('+i+')">Add to Gap Tracker</button>'+
+      '<button class="btn quiet sm" onclick="copyRec('+i+')">Copy title</button></div></div>';
+    }).join('')+
+    '<div class="btnrow"><button class="btn" onclick="pushRecs()">Add all 5 to the Gap Tracker</button></div>'+
+    '<p class="muted">"Add" writes the row directly into the 🔍 Gap Tracker tab of the TD Podcast Topic Tracker sheet — category, priority, dedup note and "Open Gap" status included.</p>';
+  } finally{unbusy()}
+}
+function splitNewsletters(content){
+  content=cleanAI(content);
+  var parts=[];var wk=content.split('=== WEEKEND ===');
+  parts.push({key:'weekly',label:'Weekly newsletter',raw:wk[0].replace('=== WEEKLY ===','').trim()});
+  if(wk[1])parts.push({key:'weekend',label:'Weekend newsletter',raw:wk[1].trim()});
+  return parts.map(function(p){
+    var m=p.raw.match(/^SUBJECT:\s*(.+)$/m);
+    var i=p.raw.indexOf('<'),j=p.raw.lastIndexOf('>');
+    return {key:p.key,label:p.label,subject:m?m[1]:'',raw:p.raw,html:(i>-1&&j>i)?p.raw.slice(i,j+1):''};
+  });
+}
+
+/* ---- analytics charts (inline SVG) ---- */
+// Vertical column chart — open rate % per send, oldest to newest
+function colChart(title,sub,items){
+  if(!items.length)return '';
+  var W=760,H=250,padL=44,padB=42,padT=16,cw=(W-padL-14)/items.length;
+  var s='';
+  [0,25,50,75,100].forEach(function(g){
+    var y=padT+(H-padT-padB)*(1-g/100);
+    s+='<line x1="'+padL+'" y1="'+y+'" x2="'+(W-8)+'" y2="'+y+'" stroke="#E5EBEC" stroke-width="1"/>'+
+       '<text x="'+(padL-8)+'" y="'+(y+4)+'" text-anchor="end" font-size="10" fill="#5F7278">'+g+'%</text>';
+  });
+  items.forEach(function(d,i){
+    var x=padL+i*cw+cw*0.18, bw=cw*0.64;
+    var bh=Math.max(2,(H-padT-padB)*d.v/100), y=H-padB-bh;
+    s+='<g><title>'+esc(d.l)+' — '+d.v.toFixed(1)+'% opened'+(d.date?' · '+esc(d.date):'')+'</title>'+
+       '<rect x="'+x+'" y="'+y+'" width="'+bw+'" height="'+bh+'" rx="4" fill="url(#tg)"/>'+
+       '<text x="'+(x+bw/2)+'" y="'+(y-5)+'" text-anchor="middle" font-size="10.5" font-weight="700" fill="#152228">'+Math.round(d.v)+'%</text>'+
+       '<text x="'+(x+bw/2)+'" y="'+(H-padB+14)+'" text-anchor="middle" font-size="9" fill="#5F7278">'+esc((d.date||'').slice(5))+'</text>'+
+       '<text x="'+(x+bw/2)+'" y="'+(H-padB+26)+'" text-anchor="middle" font-size="8.5" fill="#8B9AA0">'+esc(d.l.slice(0,Math.max(4,Math.floor(cw/6))))+'…</text></g>';
+  });
+  return '<div class="chart"><h4>'+esc(title)+'</h4><p class="csub">'+esc(sub)+'</p>'+
+    '<div style="overflow-x:auto"><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;min-width:560px;display:block">'+
+    '<defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0" stop-color="#14B8A6"/><stop offset="1" stop-color="#0B6E66"/></linearGradient></defs>'+s+'</svg></div></div>';
+}
+// Engagement funnel — recipients ▸ opened ▸ clicked, layered per send
+function funnelChart(title,sub,rows){
+  if(!rows.length)return '';
+  rows=rows.slice().sort(function(a,b){return b.rec-a.rec});
+  var max=Math.max.apply(null,rows.map(function(r){return r.rec}))||1;
+  var body=rows.map(function(r){
+    var wr=r.rec/max*100, wo=r.rec?r.opened/max*100:0, wc=r.rec?r.clicked/max*100:0;
+    return '<div class="crow" title="'+esc(r.l)+' — '+r.rec+' recipients · '+Math.round(r.opened)+' opened ('+r.openPct.toFixed(1)+'%) · '+r.clicked+' clicked">'+
+      '<span class="clabel">'+esc(r.l)+'</span>'+
+      '<span class="ctrack" style="background:#F1F5F6">'+
+        '<span style="position:absolute;left:0;top:3px;height:14px;border-radius:3px;width:'+wr.toFixed(1)+'%;background:#CBE7E4"></span>'+
+        '<span style="position:absolute;left:0;top:3px;height:14px;border-radius:3px;width:'+Math.max(0.4,wo).toFixed(1)+'%;background:#4FB3AC"></span>'+
+        '<span style="position:absolute;left:0;top:3px;height:14px;border-radius:3px;width:'+Math.max(0.3,wc).toFixed(1)+'%;background:#0B6E66"></span>'+
+      '</span>'+
+      '<span class="cval" style="width:120px">'+r.rec+' ▸ '+Math.round(r.opened)+' ▸ '+r.clicked+'</span></div>';
+  }).join('');
+  var legend='<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:#5F7278;margin:2px 0 10px">'+
+    '<span><i style="display:inline-block;width:11px;height:11px;border-radius:3px;background:#CBE7E4;margin-right:5px;vertical-align:-1px"></i>Recipients</span>'+
+    '<span><i style="display:inline-block;width:11px;height:11px;border-radius:3px;background:#4FB3AC;margin-right:5px;vertical-align:-1px"></i>Opened</span>'+
+    '<span><i style="display:inline-block;width:11px;height:11px;border-radius:3px;background:#0B6E66;margin-right:5px;vertical-align:-1px"></i>Clicked</span></div>';
+  return '<div class="chart"><h4>'+esc(title)+'</h4><p class="csub">'+esc(sub)+'</p>'+legend+body+'</div>';
+}
+async function refreshAnalytics(){
+  busy('Pulling analytics…','Fetching real send performance from Kit and checking episodes.');
+  try{
+    _an=await api('/api/analytics');
+    var nl=_an.rows.filter(function(r){return r[0]==='Newsletter (Kit)'});
+    var notes=_an.rows.filter(function(r){return r[0]==='Note'});
+    var h='';
+    if(nl.length){
+      var avg=function(i){return (nl.reduce(function(a,r){return a+(+r[i]||0)},0)/nl.length)};
+      var tot=nl.reduce(function(a,r){return a+(+r[7]||0)},0);
+      var best=nl.slice().sort(function(a,b){return (+b[5]||0)-(+a[5]||0)})[0];
+      h+='<div class="tiles">'+
+        '<div class="tile"><small>Sends analyzed</small><b>'+nl.length+'</b></div>'+
+        '<div class="tile"><small>Avg open rate</small><b>'+avg(5).toFixed(1)+'%</b></div>'+
+        '<div class="tile"><small>Avg click rate</small><b>'+avg(6).toFixed(1)+'%</b></div>'+
+        '<div class="tile"><small>Total clicks</small><b>'+tot+'</b></div></div>'+
+        (best?'<p class="muted">Best performer: <b>'+esc(best[3])+'</b> — '+(+best[5]).toFixed(1)+'% opens, '+best[7]+' clicks.</p>':'');
+      var chrono=nl.slice().reverse(); // oldest -> newest
+      h+=colChart('Open rate over time','Each column is one send, oldest to newest · hover a column for the full subject',
+        chrono.map(function(r){return {l:r[3]||('#'+r[1]),v:+r[5]||0,date:r[2]||''}}));
+      h+=funnelChart('Engagement funnel by send','How many received it ▸ opened it ▸ clicked a link — the drop-off tells you whether the subject line or the content needs work',
+        nl.map(function(r){var rec=+r[4]||0;return {l:r[3]||('#'+r[1]),rec:rec,opened:rec*(+r[5]||0)/100,openPct:+r[5]||0,clicked:+r[8]||0}}));
+    }
+    if(notes.length)h+='<div class="callout">'+esc(notes[0][3])+'</div>';
+    h+='<details style="padding:0"><summary>Full data table</summary><div id="antbl"></div></details>'+
+      '<p class="muted">'+_an.count+' rows'+(_an.wroteToSheet?' — also written to the Analytics tab of the connected sheet.':' — connect the sheet to mirror this into the master tracker.')+'</p>';
+    $('an_out').innerHTML=h||'<div class="empty">No data yet.</div>';
+    PG.antbl.p=0;renderAnTbl();
+    toast('Analytics refreshed');
+  } finally{unbusy()}
+}
+function renderAnTbl(){
+  if(!_an||!$('antbl'))return;
+  var rows=pageOf('antbl',_an.rows);
+  $('antbl').innerHTML='<div class="tblwrap"><table><tr>'+
+    ['Type','Ref','Date','Title / Subject','Recipients','Open %','Click %','Clicks','Unique','Live','Updated'].map(function(x){return '<th>'+x+'</th>'}).join('')+'</tr>'+
+    rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+esc(c)+'</td>'}).join('')+'</tr>'}).join('')+'</table></div>'+
+    pager('antbl',_an.rows.length,renderAnTbl);
+}
+
+function renderFeed(){
+  var rows=pageOf('feed',S.log);
+  $('feed').innerHTML=(S.log.length?rows.map(function(r){
+    return '<div><span class="t">'+r.t.slice(5,16).replace('T',' ')+'</span><span>'+esc(r.msg)+'</span></div>'}).join('')
+    :'<div class="empty">No activity yet.</div>')+
+    pager('feed',S.log.length,renderFeed);
+}
+/* ---- render ---- */
+async function refresh(){S=await api('/api/state');render()}
+function render(){
+  $('conn').innerHTML=
+    '<span>AI writing <b class="'+(S.mode.ai==='REAL'?'REAL':'MOCK')+'">'+esc(S.mode.ai==='REAL'?S.mode.aiProvider:'sample')+'</b></span>'+
+    '<span>Kit email <b class="'+(String(S.mode.kit).indexOf('REAL')===0?'REAL':'MOCK')+'">'+(String(S.mode.kit).indexOf('REAL')===0?'connected':'sample')+'</b></span>'+
+    '<span>Sheet DB <b class="'+(S.mode.sheets==='REAL'?'REAL':'MOCK')+'">'+(S.mode.sheets==='REAL'?'connected':'not linked')+'</b></span>'+
+    '<span>Slack <b class="'+S.mode.slack+'">'+(S.mode.slack==='REAL'?'connected':'off')+'</b></span>';
+  var pend=S.approvals.filter(function(a){return a.status==='PENDING'});
+  var openLeads=S.leads.filter(function(l){return l.status==='PENDING'&&l.score!=='COLD'});
+  $('n_Approvals').textContent=pend.length||'';
+  $('n_Leads').textContent=openLeads.length||'';
+
+  $('approvals').innerHTML=pend.length?pend.map(function(a){
+    var body;
+    if(a.type==='NEWSLETTERS'){
+      body=splitNewsletters(a.content).map(function(n){
+        return '<div class="nlcard">'+
+        '<div class="nlhead"><b>'+esc(n.label)+'</b>'+(n.subject?'<span class="subjchip">Subject: '+esc(n.subject)+'</span>':'')+
+        '<button class="btn quiet sm" style="margin-left:auto" onclick="copyNL(\''+a.id+'\',\''+n.key+'\')">Copy HTML for Stripo/Kit</button></div>'+
+        (n.html?'<iframe class="preview" sandbox="" srcdoc="'+n.html.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'"></iframe>':'<div class="empty">No HTML found in this draft — send back for regeneration.</div>')+
+        '<details><summary>View raw HTML</summary><pre>'+esc(n.raw)+'</pre></details>'+
+        '</div>';
+      }).join('');
+    } else {
+      body='<pre style="max-height:380px">'+esc(cleanAI(a.content))+'</pre>';
+    }
+    return '<div class="approval"><div class="head"><span>'+esc(a.label)+'</span><small>Step '+(a.type==='SHOWNOTES'?'1 of 2':'2 of 2')+' · written by AI, waiting on you</small></div><div class="body">'+body+
+    '<div class="btnrow"><button class="btn" onclick="decide(\''+a.id+'\',\'approve\')">Approve &amp; continue</button></div>'+
+    '<label>Or request changes</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+
+    '<input id="note_'+a.id+'" placeholder="e.g. make the subject line shorter, add the guest name…" style="flex:1;min-width:200px">'+
+    '<button class="btn warn" onclick="decide(\''+a.id+'\',\'changes\')">Send back &amp; regenerate</button></div>'+
+    '</div></div>';
+  }).join(''):'<div class="empty">Nothing waiting — the pipeline is running or idle.</div>';
+
+  $('episodes').innerHTML=S.episodes.length?S.episodes.map(function(e){
+    var idx=S.stages.indexOf(e.stage);
+    var bar=S.stages.slice(0,-1).map(function(st,i){
+      return '<i class="'+(i<=idx?(st.indexOf('REVIEW')===0?'on g':'on'):'')+'"></i>'}).join('');
+    var si=STAGE_INFO[e.stage]||[e.stage.replace(/_/g,' '),'auto'];
+    var h='<div class="epi"><h3>EP '+esc(e.ep)+' · '+esc(e.title)+' <span class="badge '+si[1]+'">'+esc(si[0])+'</span></h3>'+
+      '<div class="steps">'+bar+'</div>'+
+      '<span class="muted">Release '+esc(e.releaseDate)+(e.guest?' · '+esc(e.guest):'')+'</span>';
+    if(e.stage==='AWAITING_TRANSCRIPT'){
+      h+='<label>Clean transcript</label><textarea id="tr_'+e.id+'" placeholder="paste the clean transcript…"></textarea>'+
+      '<div class="btnrow"><button class="btn sm" onclick="sendTranscript(\''+e.id+'\')">Transcript in → run</button>'+
+      '<button class="btn sec sm" onclick="sendTranscript(\''+e.id+'\',1)">Use sample transcript</button></div>';
+    }
+    if(e.stage.indexOf('REVIEW')===0){h+='<div class="callout">Waiting on you — open <b>Approvals</b> in the sidebar.</div>'}
+    if(e.ticket){h+='<details style="padding:0"><summary>Webmaster ticket (ready to send)</summary><pre>'+esc(e.ticket.slice(0,700))+'…</pre>'+
+      '<button class="btn quiet sm" onclick="copyTicket(\''+e.id+'\')">Copy full ticket</button></details>'}
+    if(e.stage==='SCHEDULED_IN_KIT'){
+      var notes=(e.kit||[]).map(function(k){return k.note||k.error}).filter(Boolean);
+      h+='<p class="muted">Kit: '+(e.kit||[]).map(function(k){return k.id}).join(' · ')+'. The scheduler releases this automatically on '+esc(e.releaseDate)+' — nothing else to do until then.</p>'+
+      (notes.length?'<div class="callout">'+esc(notes[0])+'</div>':'')+
+      '<div class="btnrow"><button class="btn sec sm" onclick="advance(\''+e.id+'\')">Simulate release day</button></div>'+
+      '<span class="muted">Demo only: runs the release-day steps now instead of waiting for the date — live check, KPIs, lead scoring.</span>';
+    }
+    if(e.kpi){
+      var t=function(lbl,now,base){var pct=base?Math.round((now-base)/base*100):0;
+        return '<div class="tile"><small>'+lbl+'</small><b>'+now+'</b><span class="'+(pct>=0?'up':'down')+'">'+(pct>=0?'▲':'▼')+' '+Math.abs(pct)+'% vs '+base+'</span></div>'};
+      h+='<div class="tiles">'+t('Downloads 7d',e.kpi.downloads7d,e.kpi.prev4avg)+t('NL clicks',e.kpi.newsletterClicks,e.kpi.clicksPrev4avg)+
+         t('Reach',e.kpi.socialReach,e.kpi.reachPrev4avg)+t('MSM/CSM',e.kpi.msmBooked,e.kpi.msmPrev4avg)+'</div>';
+    }
+    return h+'</div>';
+  }).join(''):'<div class="empty">No episodes yet.</div>';
+
+  var doneL=S.leads.filter(function(l){return l.status!=='PENDING'});
+  var pendL=S.leads.filter(function(l){return l.status==='PENDING'});
+  $('leads').innerHTML=(pendL.length||doneL.length)?
+    pendL.map(function(l){
+      return '<div class="lead"><span class="badge '+l.score+'">'+l.score+'</span>'+
+      '<div style="flex:1"><b>'+esc(l.name)+'</b> <span class="muted">'+esc(l.role)+' · clicked: '+esc(l.link)+' · EP '+esc(l.ep)+'</span>'+
+      '<div class="draft">'+esc(l.draft)+'</div>'+
+      '<div class="btnrow" style="margin-top:4px"><button class="btn sm" onclick="copyLead(\''+l.id+'\')">Copy draft</button>'+
+      '<button class="btn sec sm" onclick="leadDo(\''+l.id+'\',\'SENT\')">Mark sent</button>'+
+      '<button class="btn quiet sm" onclick="leadDo(\''+l.id+'\',\'BDR\')">Hand to BDR</button>'+
+      '<button class="btn quiet sm" onclick="leadDo(\''+l.id+'\',\'SKIPPED\')">Skip</button></div></div></div>';
+    }).join('')+(doneL.length?'<p class="muted">'+doneL.length+' actioned.</p>':'')
+    :'<div class="empty">Leads appear after an episode releases.</div>';
+
+  renderFeed();
+  $('arc_count').textContent=S.archive&&S.archive.ok?
+    S.archive.count+' past episodes loaded ('+(S.archive.source==='sheet'?'from the connected sheet':'from the CSV export')+'). Recommendations find the least-covered themes and screen every idea against the full archive.':
+    'Archive not loaded — connect the sheet or check ARCHIVE_CSV_PATH.';
+}
+refresh().then(function(){arcSearch()});
+setInterval(function(){ if(!$('busy').classList.contains('show')) refresh(); },5000);
+</script>
+</body>
+</html>
