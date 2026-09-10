@@ -182,6 +182,19 @@ details summary{cursor:pointer;font-size:12.5px;color:var(--muted);font-weight:6
 @keyframes sp{to{transform:rotate(360deg)}}
 #busy b{font-family:var(--fh);font-size:14.5px;display:block;margin-bottom:4px}
 #busy span{color:var(--muted);font-size:12.5px}
+#busy .box{min-width:340px;max-width:420px;text-align:left}
+#busy .spin{margin:0 auto 12px}
+#busy b,#busy>div>span{display:block;text-align:center}
+.pwrap{height:8px;background:var(--accent-soft);border-radius:5px;margin:14px 0 6px;overflow:hidden}
+.pbar{height:8px;width:0%;border-radius:5px;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .6s ease}
+.pelapsed{font-size:11px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.psteps{margin:10px 0 0;padding:0 0 0 4px;list-style:none;font-size:12.5px}
+.psteps li{padding:3px 0;color:var(--muted);display:flex;gap:8px;align-items:baseline}
+.psteps li:before{content:'○';color:var(--line)}
+.psteps li.doing{color:var(--ink);font-weight:600}
+.psteps li.doing:before{content:'◔';color:var(--accent)}
+.psteps li.done{color:var(--green)}
+.psteps li.done:before{content:'✓';color:var(--green)}
 /* ---------- charts ---------- */
 .chart{border:1px solid var(--line);border-radius:12px;padding:16px 18px 12px;margin:16px 0;background:var(--card)}
 .chart h4{font-family:var(--fh);font-size:13px;font-weight:800;margin:0 0 2px}
@@ -237,12 +250,12 @@ details summary{cursor:pointer;font-size:12.5px;color:var(--muted);font-weight:6
       <div class="step"><span class="num">1</span><div><b>Paste the clean transcript <span class="who you">YOU · TOUCH 1</span></b>
         <p>Create the episode on the Pipeline page and paste the transcript. Everything below starts automatically.</p></div>
         <button class="btn sec sm golink" onclick="showPage('Pipeline')">Open Pipeline</button></div>
-      <div class="step"><span class="num">2</span><div><b>AI writes the show notes <span class="who sys">SYSTEM</span></b>
-        <p>SEO description, timestamps, takeaways, title tag, and both CTA links — written from the transcript in about a minute.</p></div></div>
-      <div class="step"><span class="num">3</span><div><b>Approve the show notes <span class="who you">YOU · TOUCH 2 — GATE 1</span></b>
-        <p>Read, then Approve — or type what to change and the AI rewrites it. On approve, the webmaster ticket is built ready to copy-send, and the newsletters start writing themselves.</p></div>
+      <div class="step"><span class="num">2</span><div><b>AI writes the episode page package <span class="who sys">SYSTEM</span></b>
+        <p>The full TD page layout: schedule details, episode intro, key takeaways, and timestamped show notes with verbatim transcript quotes.</p></div></div>
+      <div class="step"><span class="num">3</span><div><b>Approve the episode page package <span class="who you">YOU · TOUCH 2 — GATE 1</span></b>
+        <p>Read, then Approve — or type what to change and the AI rewrites it. On approve, the newsletters start writing themselves from the EP 756 brand templates.</p></div>
         <button class="btn sec sm golink" onclick="showPage('Approvals')">Open Approvals</button></div>
-      <div class="step"><span class="num">4</span><div><b>AI writes both newsletters <span class="who sys">SYSTEM</span></b>
+      <div class="step"><span class="num">4</span><div><b>AI writes both newsletters from the brand templates <span class="who sys">SYSTEM</span></b>
         <p>Weekly + weekend emails as ready-to-send HTML, previewed exactly as subscribers will see them.</p></div></div>
       <div class="step"><span class="num">5</span><div><b>Approve the newsletters <span class="who you">YOU · TOUCH 3 — GATE 2</span></b>
         <p>Check the previews on the Approvals page and approve. That's your last touch before release.</p></div></div>
@@ -333,7 +346,7 @@ details summary{cursor:pointer;font-size:12.5px;color:var(--muted);font-weight:6
 </div>
 
 <div class="toast" id="toast"></div>
-<div id="busy"><div class="box"><div class="spin"></div><b id="busy_t">Working…</b><span id="busy_s">This can take up to a minute while the AI writes.</span></div></div>
+<div id="busy"><div class="box"><div class="spin"></div><b id="busy_t">Working…</b><span id="busy_s"></span><div class="pwrap"><div class="pbar" id="busy_bar"></div></div><div class="pelapsed" id="busy_el"></div><ol class="psteps" id="busy_steps"></ol></div></div>
 
 <script>
 'use strict';
@@ -342,8 +355,35 @@ var _recs=[], _an=null;
 function $(id){return document.getElementById(id)}
 function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2200)}
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
-function busy(title,subtitle){$('busy_t').textContent=title;$('busy_s').textContent=subtitle||'This can take up to a minute while the AI writes.';$('busy').classList.add('show')}
-function unbusy(){$('busy').classList.remove('show')}
+var _busyTimer=null,_busyT0=0,_busySteps=[],_busyEst=60;
+function busy(title,subtitle,steps,estSeconds){
+  $('busy_t').textContent=title;
+  $('busy_s').textContent=subtitle||'';
+  _busySteps=steps||[]; _busyEst=estSeconds||60; _busyT0=Date.now();
+  $('busy_steps').innerHTML=_busySteps.map(function(st){return '<li>'+esc(st)+'</li>'}).join('');
+  $('busy_bar').style.width='2%'; $('busy_el').textContent='';
+  $('busy').classList.add('show');
+  clearInterval(_busyTimer);
+  _busyTimer=setInterval(function(){
+    var sec=(Date.now()-_busyT0)/1000;
+    var pct=Math.min(92, sec/_busyEst*100);
+    $('busy_bar').style.width=pct.toFixed(1)+'%';
+    var m=Math.floor(sec/60), ss=Math.floor(sec%60);
+    $('busy_el').textContent='elapsed '+m+':'+(ss<10?'0':'')+ss+(sec>_busyEst?' · taking a bit longer than usual, still working':'');
+    if(_busySteps.length){
+      var per=_busyEst/_busySteps.length, idx=Math.min(_busySteps.length-1, Math.floor(sec/per));
+      [].forEach.call($('busy_steps').children,function(li,i){
+        li.className=i<idx?'done':(i===idx?'doing':'');
+      });
+    }
+  },500);
+}
+function unbusy(){
+  clearInterval(_busyTimer);
+  $('busy_bar').style.width='100%';
+  [].forEach.call($('busy_steps').children,function(li){li.className='done'});
+  setTimeout(function(){$('busy').classList.remove('show')},350);
+}
 async function api(path,data){
   var r=await fetch(path,data?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)}:undefined);
   var j=await r.json();
@@ -416,17 +456,16 @@ if(PAGES.indexOf(startTab)<0)startTab='Overview';
 showPage(startTab);
 // human-readable step names for every pipeline stage (post-podcast steps 1-9)
 var STAGE_INFO={
- AWAITING_TRANSCRIPT:  ['Step 1 · Paste the clean transcript','gate'],
- GENERATING_SHOWNOTES: ['Step 2 · AI writing show notes…','auto'],
- REVIEW_SHOWNOTES:     ['Step 3 ⛭ Approve the show notes','gate'],
- TICKET_READY:         ['Step 3 · Ticket built — approving…','auto'],
- GENERATING_NEWSLETTERS:['Step 4 · AI writing newsletters…','auto'],
+ AWAITING_TRANSCRIPT:  ['Step 1 · Add the clean transcript','gate'],
+ GENERATING_SHOWNOTES: ['Step 2 · AI writing the episode page package…','auto'],
+ REVIEW_SHOWNOTES:     ['Step 3 ⛭ Approve the episode page package','gate'],
+ GENERATING_NEWSLETTERS:['Step 4 · AI writing newsletters from the brand templates…','auto'],
  REVIEW_NEWSLETTERS:   ['Step 5 ⛭ Approve the newsletters','gate'],
  SCHEDULED_IN_KIT:     ['Step 6 · Drafts in Kit — waiting for release day','auto'],
- RELEASED:             ['Step 7 · Live — pulling KPIs…','auto'],
- KPI_READY:            ['Step 7 · KPIs ready','auto'],
- LEADS_READY:          ['Step 8–9 ⛭ Send the lead follow-ups','gate'],
- COMPLETE:             ['Complete ✓ all 9 steps done','done']
+ RELEASED:             ['Step 7 · Live — checking…','auto'],
+ KPI_READY:            ['Step 7 · Release checks done','auto'],
+ LEADS_READY:          ['Step 8 ⛭ Send the lead follow-ups','gate'],
+ COMPLETE:             ['Complete ✓','done']
 };
 
 /* ---- actions ---- */
@@ -434,39 +473,66 @@ var SAMPLE_TRANSCRIPT="Gary: Welcome back to the Thriving Dentist Show. Today I'
 
 async function createEp(){
   if(!$('n_title').value){toast('Give the episode a title');return}
-  busy('Creating episode…','Setting up the pipeline.');
+  busy('Creating episode','',['Saving to the tracker sheet'],10);
   try{
     await api('/api/episodes',{epNum:$('n_ep').value,title:$('n_title').value,guest:$('n_guest').value,
       releaseDate:$('n_date').value||new Date(Date.now()+6*864e5).toISOString().slice(0,10)});
     toast('Episode created — drop the transcript in');await refresh();
   } finally{unbusy()}
 }
+var _trDrafts={};
+function saveTrDrafts(){
+  document.querySelectorAll('textarea[id^="tr_"]').forEach(function(t){ if(t.value) _trDrafts[t.id]=t.value; else delete _trDrafts[t.id]; });
+}
+function restoreTrDrafts(){
+  Object.keys(_trDrafts).forEach(function(id){ var t=$(id); if(t) t.value=_trDrafts[id]; });
+}
+async function uploadTranscript(id, input){
+  var f=input.files && input.files[0]; if(!f) return;
+  var text='';
+  try{ text=await f.text(); }catch(err){ toast('Could not read the file: '+err.message); return }
+  if(!text || !text.trim()){ toast('That file looks empty — for Word docs, save as .txt first'); input.value=''; return }
+  delete _trDrafts['tr_'+id];
+  input.value='';
+  await sendTranscriptText(id, text, f.name);
+}
+async function sendTranscriptText(id, text, fname){
+  busy('Writing the episode page package', (fname?fname+' loaded.':''),
+    ['Transcript received','AI writing intro, takeaways and timestamped notes','Saving to the tracker sheet'], 70);
+  try{ await api('/api/transcript',{id:id,text:text}); await refresh(); showPage('Approvals'); toast('Episode page package ready for review'); }
+  finally{unbusy()}
+}
 async function sendTranscript(id,useSample){
   var text=useSample?SAMPLE_TRANSCRIPT:($('tr_'+id)?$('tr_'+id).value:'');
   if(!text){toast('Paste a transcript first');return}
-  busy('Writing show notes…','The AI is reading the transcript and drafting the SEO show-notes package.');
-  try{ await api('/api/transcript',{id:id,text:text}); await refresh(); showPage('Approvals'); toast('Show notes ready for your review'); }
-  finally{unbusy()}
+  delete _trDrafts['tr_'+id];
+  await sendTranscriptText(id,text);
 }
 async function decide(id,decision){
   var notes=decision==='changes'?($('note_'+id).value||''):'';
   if(decision==='changes'&&!notes){toast('Write what to change first');return}
   var ap=S.approvals.find(function(a){return a.id===id});
   var isNL=ap&&ap.type==='NEWSLETTERS';
-  busy(decision==='approve'?(isNL?'Creating drafts in Kit…':'Approved — writing both newsletters…')
-                           :'Rewriting with your notes…',
-       decision==='approve'&&!isNL?'Building the webmaster ticket, then drafting the weekly and weekend emails.':undefined);
+  if(decision==='approve'&&!isNL){
+    busy('Writing both newsletters','Using the EP 756 brand templates.',
+      ['Approval saved','AI writing the WEEKLY newsletter','AI writing the WEEKEND newsletter','Saving drafts for your review'], 120);
+  } else if(decision==='approve'&&isNL){
+    busy('Creating drafts in Kit','Nothing sends — drafts only, a human schedules inside Kit.',
+      ['Approval saved','Creating weekly draft in Kit','Creating weekend draft in Kit','Saving'], 30);
+  } else {
+    busy('Rewriting with your notes','The AI is applying your feedback.',
+      ['Reading your notes','Rewriting','Saving the new version for review'], isNL?120:70);
+  }
   try{ await api('/api/decide',{approvalId:id,decision:decision,notes:notes}); await refresh();
        toast(decision==='approve'?'Approved — pipeline continued':'Regenerated — review the new version'); }
   finally{unbusy()}
 }
 async function advance(id){
-  busy('Simulating release day…','Checking the live URL, pulling KPIs, and scoring newsletter clickers.');
+  busy('Simulating release day','',['Checking the episode is live','Collecting available stats','Saving'],25);
   try{ await api('/api/advance',{id:id}); await refresh(); toast('Released — see KPIs and the Leads tab'); }
   finally{unbusy()}
 }
 async function leadDo(id,status){await api('/api/lead',{leadId:id,status:status});refresh()}
-function copyTicket(epId){var e=S.episodes.find(function(x){return x.id===epId});if(e)copyText(e.ticket)}
 function copyNL(apId,kind){
   var ap=S.approvals.find(function(a){return a.id===apId});if(!ap)return;
   var part=splitNewsletters(ap.content).find(function(n){return n.key===kind});
@@ -508,7 +574,7 @@ async function pushRecs(idx){
   } finally{unbusy()}
 }
 async function recommendTopics(){
-  busy('Analyzing the archive…','Reading every past episode title and finding the gaps.');
+  busy('Finding topic gaps','',['Reading all past topics','AI proposing 5 new topics','Running duplicate checks'],40);
   try{
     _recs=await api('/api/topics/recommend',{});
     $('trec').innerHTML=_recs.map(function(t,i){
@@ -587,7 +653,7 @@ function funnelChart(title,sub,rows){
   return '<div class="chart"><h4>'+esc(title)+'</h4><p class="csub">'+esc(sub)+'</p>'+legend+body+'</div>';
 }
 async function refreshAnalytics(){
-  busy('Pulling analytics…','Fetching real send performance from Kit and checking episodes.');
+  busy('Pulling analytics','Podcast-related sends only.',['Fetching Kit broadcasts','Reading stats per send','Writing the Analytics tab in the sheet'],50);
   try{
     _an=await api('/api/analytics');
     var nl=_an.rows.filter(function(r){return r[0]==='Newsletter (Kit)'});
@@ -628,10 +694,16 @@ function renderAnTbl(){
 
 function renderFeed(){
   var rows=pageOf('feed',S.log);
-  $('feed').innerHTML=(S.log.length?rows.map(function(r){
+  setHTML('feed', (S.log.length?rows.map(function(r){
     return '<div><span class="t">'+r.t.slice(5,16).replace('T',' ')+'</span><span>'+esc(r.msg)+'</span></div>'}).join('')
     :'<div class="empty">No activity yet.</div>')+
-    pager('feed',S.log.length,renderFeed);
+    pager('feed',S.log.length,renderFeed));
+}
+var _lastHTML={};
+function setHTML(id, html){
+  if(_lastHTML[id]===html) return;   // nothing changed -> leave the DOM (and your scroll) alone
+  _lastHTML[id]=html;
+  $(id).innerHTML=html;
 }
 /* ---- render ---- */
 async function refresh(){S=await api('/api/state');render()}
@@ -647,7 +719,7 @@ function render(){
   $('n_Approvals').textContent=pend.length||'';
   $('n_Leads').textContent=openLeads.length||'';
 
-  $('approvals').innerHTML=pend.length?pend.map(function(a){
+  setHTML('approvals', pend.length?pend.map(function(a){
     var body;
     if(a.type==='NEWSLETTERS'){
       body=splitNewsletters(a.content).map(function(n){
@@ -667,9 +739,10 @@ function render(){
     '<input id="note_'+a.id+'" placeholder="e.g. make the subject line shorter, add the guest name…" style="flex:1;min-width:200px">'+
     '<button class="btn warn" onclick="decide(\''+a.id+'\',\'changes\')">Send back &amp; regenerate</button></div>'+
     '</div></div>';
-  }).join(''):'<div class="empty">Nothing waiting — the pipeline is running or idle.</div>';
+  }).join(''):'<div class="empty">Nothing waiting — the pipeline is running or idle.</div>');
 
-  $('episodes').innerHTML=S.episodes.length?S.episodes.map(function(e){
+  saveTrDrafts();
+  setHTML('episodes', S.episodes.length?S.episodes.map(function(e){
     var idx=S.stages.indexOf(e.stage);
     var bar=S.stages.slice(0,-1).map(function(st,i){
       return '<i class="'+(i<=idx?(st.indexOf('REVIEW')===0?'on g':'on'):'')+'"></i>'}).join('');
@@ -678,13 +751,15 @@ function render(){
       '<div class="steps">'+bar+'</div>'+
       '<span class="muted">Release '+esc(e.releaseDate)+(e.guest?' · '+esc(e.guest):'')+'</span>';
     if(e.stage==='AWAITING_TRANSCRIPT'){
-      h+='<label>Clean transcript</label><textarea id="tr_'+e.id+'" placeholder="paste the clean transcript…"></textarea>'+
-      '<div class="btnrow"><button class="btn sm" onclick="sendTranscript(\''+e.id+'\')">Transcript in → run</button>'+
-      '<button class="btn sec sm" onclick="sendTranscript(\''+e.id+'\',1)">Use sample transcript</button></div>';
+      h+='<label>Clean transcript</label>'+
+      '<div class="btnrow" style="margin-top:2px">'+
+      '<button class="btn sm" onclick="document.getElementById(\'file_'+e.id+'\').click()">Upload transcript file (.txt)</button>'+
+      '<input type="file" id="file_'+e.id+'" accept=".txt,.text,.md,.srt,.vtt" style="display:none" onchange="uploadTranscript(\''+e.id+'\',this)">'+
+      '<span class="muted" style="align-self:center">Word doc? Save it as .txt first — or paste below.</span></div>'+
+      '<textarea id="tr_'+e.id+'" placeholder="…or paste the clean transcript here (it stays put now)"></textarea>'+
+      '<div class="btnrow"><button class="btn sec sm" onclick="sendTranscript(\''+e.id+'\')">Use pasted text → run</button></div>';
     }
     if(e.stage.indexOf('REVIEW')===0){h+='<div class="callout">Waiting on you — open <b>Approvals</b> in the sidebar.</div>'}
-    if(e.ticket){h+='<details style="padding:0"><summary>Webmaster ticket (ready to send)</summary><pre>'+esc(e.ticket.slice(0,700))+'…</pre>'+
-      '<button class="btn quiet sm" onclick="copyTicket(\''+e.id+'\')">Copy full ticket</button></details>'}
     if(e.stage==='SCHEDULED_IN_KIT'){
       var notes=(e.kit||[]).map(function(k){return k.note||k.error}).filter(Boolean);
       h+='<p class="muted">Kit: '+(e.kit||[]).map(function(k){return k.id}).join(' · ')+'. The scheduler releases this automatically on '+esc(e.releaseDate)+' — nothing else to do until then.</p>'+
@@ -703,11 +778,12 @@ function render(){
         'Newsletter click stats appear in Analytics after a broadcast actually sends.</p>';
     }
     return h+'</div>';
-  }).join(''):'<div class="empty">No episodes yet.</div>';
+  }).join(''):'<div class="empty">No episodes yet.</div>');
+  restoreTrDrafts();
 
   var doneL=S.leads.filter(function(l){return l.status!=='PENDING'});
   var pendL=S.leads.filter(function(l){return l.status==='PENDING'});
-  $('leads').innerHTML=(pendL.length||doneL.length)?
+  setHTML('leads', (pendL.length||doneL.length)?
     pendL.map(function(l){
       return '<div class="lead"><span class="badge '+l.score+'">'+l.score+'</span>'+
       '<div style="flex:1"><b>'+esc(l.name)+'</b> <span class="muted">'+esc(l.role)+' · clicked: '+esc(l.link)+' · EP '+esc(l.ep)+'</span>'+
@@ -717,7 +793,7 @@ function render(){
       '<button class="btn quiet sm" onclick="leadDo(\''+l.id+'\',\'BDR\')">Hand to BDR</button>'+
       '<button class="btn quiet sm" onclick="leadDo(\''+l.id+'\',\'SKIPPED\')">Skip</button></div></div></div>';
     }).join('')+(doneL.length?'<p class="muted">'+doneL.length+' actioned.</p>':'')
-    :'<div class="empty">Leads appear after an episode releases.</div>';
+    :'<div class="empty">Leads appear after an episode releases.</div>');
 
   renderFeed();
   $('arc_count').textContent=S.archive&&S.archive.ok?
