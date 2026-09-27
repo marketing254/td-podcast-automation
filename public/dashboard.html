@@ -281,8 +281,16 @@ details summary{cursor:pointer;font-size:12.5px;color:var(--muted);font-weight:6
     <div class="row">
       <div><label>Episode #</label><input id="n_ep" value="765"></div>
       <div style="grid-column:span 2"><label>Title</label><input id="n_title" placeholder="episode title"></div>
-      <div><label>Guest / co-host</label><input id="n_guest" value="Naren"></div>
       <div><label>Release date</label><input id="n_date" type="date"></div>
+    </div>
+    <label style="margin-top:14px">People on this episode <span style="text-transform:none;font-weight:400">(each appears as a photo circle in the newsletter — photos are remembered for next time)</span></label>
+    <div id="people_rows"></div>
+    <div class="btnrow" style="margin-top:6px"><button type="button" class="btn quiet sm" onclick="addPerson()">+ Add person</button></div>
+    <label style="margin-top:14px">Page layout links <span style="text-transform:none;font-weight:400">(go into the package for Gayan — leave blank to get [ADD …] placeholders)</span></label>
+    <div class="row">
+      <div><label>Episode thumbnail link</label><input id="n_thumb" placeholder="https://…"></div>
+      <div><label>WAV / MP3 file link</label><input id="n_wav" placeholder="https://drive.google.com/…"></div>
+      <div><label>Embed link</label><input id="n_embed" placeholder="https://oembed.libsyn.com/…"></div>
     </div>
     <div class="btnrow"><button class="btn" onclick="createEp()">Start pipeline</button></div>
   </div>
@@ -471,13 +479,65 @@ var STAGE_INFO={
 /* ---- actions ---- */
 var SAMPLE_TRANSCRIPT="Gary: Welcome back to the Thriving Dentist Show. Today I'm with Dr. Kelly Nguyen, who runs a practice in Austin that moved to a four-day week two years ago.\nKelly: Thanks Gary. Honestly, we were burning out. Production was flat at about $95,000 a month and my team was exhausted.\nGary: So walk me through it. What changed first?\nKelly: Block scheduling. We rebuilt the schedule around two production columns, moved all hygiene checks into fixed windows, and stopped accepting same-day schedule chaos. Within ninety days production went to $116,000 a month on four days instead of five.\nGary: That's a 22 percent lift with a day off the schedule. What about the team?\nKelly: Retention. Nobody has left in two years. Recruiting got easier too, because a four-day week is the first thing candidates ask about.\nGary: If a practice owner listening wants to try this, where do they start?\nKelly: Track your hourly production per column for thirty days first. You cannot redesign a schedule you have not measured.";
 
+var _people=[{name:'Gary Takacs',img:''},{name:'Naren Arulrajah',img:''}];
+function libFill(){
+  var lib=S.people||{};
+  _people.forEach(function(p){ if(!p.img){ var u=lib[p.name.trim().toLowerCase()]; if(u){ var m=u.match(/googleusercontent\.com\/d\/([\w-]+)/); p.img=m?('https://drive.google.com/thumbnail?id='+m[1]+'&sz=w400'):u; } } });
+}
+function renderPeople(){
+  libFill();
+  $('people_rows').innerHTML=_people.map(function(p,i){
+    var circ=p.img?'<img src="'+esc(p.img)+'" style="width:44px;height:44px;border-radius:22px;object-fit:cover;border:2px solid var(--accent-soft)">'
+      :'<span style="display:inline-flex;width:44px;height:44px;border-radius:22px;background:var(--accent-soft);color:var(--accent-deep);font-weight:700;align-items:center;justify-content:center">'+esc(p.name.split(/\s+/).map(function(w){return w[0]||""}).join("").slice(0,2).toUpperCase())+'</span>';
+    return '<div style="display:flex;gap:10px;align-items:center;margin:6px 0;flex-wrap:wrap">'+circ+
+      '<input style="flex:1;min-width:160px" value="'+esc(p.name)+'" placeholder="Full name" onchange="_people['+i+'].name=this.value;renderPeople()">'+
+      '<button type="button" class="btn sec sm" onclick="document.getElementById(\'pf_'+i+'\').click()">'+(p.img?'Change photo':'Upload photo')+'</button>'+
+      '<input type="file" id="pf_'+i+'" accept="image/*" style="display:none" onchange="uploadPersonPhoto('+i+',this)">'+
+      (_people.length>1?'<button type="button" class="btn quiet sm" onclick="_people.splice('+i+',1);renderPeople()">Remove</button>':'')+
+      '</div>';
+  }).join('');
+}
+function addPerson(){_people.push({name:'',img:''});renderPeople()}
+async function uploadPersonPhoto(i,input){
+  var f=input.files && input.files[0]; if(!f) return;
+  if(!/^image\//.test(f.type)){ toast('Please choose an image file'); input.value=''; return }
+  toast('Uploading photo\u2026');
+  try{
+    var b64=await resizeToSquareJpeg(f, 400, 0.85);
+    var r=await api('/api/upload-headshot',{name:(_people[i].name||'person').replace(/\s+/g,'-')+'.jpg', mime:'image/jpeg', data:b64});
+    _people[i].img=r.url; renderPeople(); toast('Photo ready \u2014 it will appear in the newsletter');
+  }catch(err){ toast('Upload failed: '+err.message); }
+  finally{ input.value=''; }
+}
+function resizeToSquareJpeg(file, size, quality){
+  return new Promise(function(resolve,reject){
+    var img=new Image();
+    img.onload=function(){
+      try{
+        var side=Math.min(img.width,img.height);
+        var sx=(img.width-side)/2, sy=(img.height-side)/2;
+        var c=document.createElement('canvas'); c.width=size; c.height=size;
+        c.getContext('2d').drawImage(img,sx,sy,side,side,0,0,size,size);
+        var dataUrl=c.toDataURL('image/jpeg',quality);
+        resolve(dataUrl.slice(dataUrl.indexOf(',')+1));
+      }catch(e){reject(e)}
+    };
+    img.onerror=function(){reject(new Error('could not read the image'))};
+    img.src=URL.createObjectURL(file);
+  });
+}
 async function createEp(){
   if(!$('n_title').value){toast('Give the episode a title');return}
   busy('Creating episode','',['Saving to the tracker sheet'],10);
   try{
-    await api('/api/episodes',{epNum:$('n_ep').value,title:$('n_title').value,guest:$('n_guest').value,
+    await api('/api/episodes',{epNum:$('n_ep').value,title:$('n_title').value,
+      people:_people.filter(function(p){return p.name.trim()}),
+      thumb:$('n_thumb').value,wav:$('n_wav').value,embed:$('n_embed').value,
       releaseDate:$('n_date').value||new Date(Date.now()+6*864e5).toISOString().slice(0,10)});
-    toast('Episode created — drop the transcript in');await refresh();
+    toast('Episode created — drop the transcript in');
+    _people=[{name:'Gary Takacs',img:''},{name:'Naren Arulrajah',img:''}];
+    $('n_thumb').value='';$('n_wav').value='';$('n_embed').value='';
+    await refresh();renderPeople();
   } finally{unbusy()}
 }
 var _trDrafts={};
@@ -800,8 +860,12 @@ function render(){
     S.archive.count+' past episodes loaded ('+(S.archive.source==='sheet'?'from the connected sheet':'from the CSV export')+'). Recommendations find the least-covered themes and screen every idea against the full archive.':
     'Archive not loaded — connect the sheet or check ARCHIVE_CSV_PATH.';
 }
-refresh().then(function(){arcSearch()});
-setInterval(function(){ if(!$('busy').classList.contains('show')) refresh(); },5000);
+refresh().then(function(){arcSearch();renderPeople()});
+var _refreshing=false;
+setInterval(async function(){
+  if($('busy').classList.contains('show')||_refreshing) return;
+  _refreshing=true; try{ await refresh(); } catch(e){} finally{ _refreshing=false; }
+},10000);
 </script>
 </body>
 </html>

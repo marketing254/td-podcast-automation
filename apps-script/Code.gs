@@ -67,6 +67,18 @@ function doPost(e) {
       sh.getRange(1, 1, 1, (rows[0] || [1]).length).setFontWeight("bold");
       res = { ok: true, rows: rows.length };
 
+    } else if (req.op === "uploadImage") {
+      // Saves a headshot into Drive ("TD AutoPilot Headshots" folder),
+      // makes it viewable by link, returns a direct image URL for emails.
+      const folderName = "TD AutoPilot Headshots";
+      const it = DriveApp.getFoldersByName(folderName);
+      const folder = it.hasNext() ? it.next() : DriveApp.createFolder(folderName);
+      const bytes = Utilities.base64Decode(req.dataB64);
+      const blob = Utilities.newBlob(bytes, req.mime || "image/jpeg", req.name || ("headshot-" + Date.now() + ".jpg"));
+      const file = folder.createFile(blob);
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      res = { ok: true, id: file.getId(), url: "https://lh3.googleusercontent.com/d/" + file.getId() };
+
     } else if (req.op === "appendGapRows") {
       let sh = ss.getSheets().find(s => s.getName().indexOf("Gap Tracker") > -1);
       if (!sh) throw new Error("Gap Tracker tab not found");

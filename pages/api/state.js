@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   try {
     const db = await P.ready();
     const arc = await ARC.ensureLoaded();
-    res.json({ ...db, mode: { ...A.mode, sheets: SDB.enabled() ? "REAL" : "MOCK" }, stages: P.STAGES,
+    res.json({ ...db, people: db.people || {}, mode: { ...A.mode, sheets: SDB.enabled() ? "REAL" : "MOCK" }, stages: P.STAGES,
       archive: { ok: arc.ok, count: ARC.count(), source: arc.source } });
   } catch (e) { res.status(500).json({ error: e.message }); }
 }
