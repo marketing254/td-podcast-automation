@@ -492,7 +492,7 @@ function renderPeople(){
     return '<div style="display:flex;gap:10px;align-items:center;margin:6px 0;flex-wrap:wrap">'+circ+
       '<input style="flex:1;min-width:160px" value="'+esc(p.name)+'" placeholder="Full name" onchange="_people['+i+'].name=this.value;renderPeople()">'+
       '<button type="button" class="btn sec sm" onclick="document.getElementById(\'pf_'+i+'\').click()">'+(p.img?'Change photo':'Upload photo')+'</button>'+
-      '<input type="file" id="pf_'+i+'" accept="image/*" style="display:none" onchange="uploadPersonPhoto('+i+',this)">'+
+      '<input type="file" id="pf_'+i+'" accept=".jpg,.jpeg,.png,.webp,.gif,image/*" style="display:none" onchange="uploadPersonPhoto('+i+',this)">'+
       (_people.length>1?'<button type="button" class="btn quiet sm" onclick="_people.splice('+i+',1);renderPeople()">Remove</button>':'')+
       '</div>';
   }).join('');
@@ -500,7 +500,10 @@ function renderPeople(){
 function addPerson(){_people.push({name:'',img:''});renderPeople()}
 async function uploadPersonPhoto(i,input){
   var f=input.files && input.files[0]; if(!f) return;
-  if(!/^image\//.test(f.type)){ toast('Please choose an image file'); input.value=''; return }
+  // Accept by MIME type OR file extension — Windows sometimes reports an empty
+  // type for real images. The decode step below is the true test.
+  var okType=/^image\//.test(f.type)||/\.(jpe?g|png|webp|gif)$/i.test(f.name);
+  if(!okType){ toast('Use a JPG or PNG photo'); input.value=''; return }
   toast('Uploading photo\u2026');
   try{
     var b64=await resizeToSquareJpeg(f, 400, 0.85);
@@ -522,7 +525,7 @@ function resizeToSquareJpeg(file, size, quality){
         resolve(dataUrl.slice(dataUrl.indexOf(',')+1));
       }catch(e){reject(e)}
     };
-    img.onerror=function(){reject(new Error('could not read the image'))};
+    img.onerror=function(){reject(new Error('this image could not be read — please use a standard JPG or PNG'))};
     img.src=URL.createObjectURL(file);
   });
 }
